@@ -1,1 +1,62 @@
+package edu.ccrm.domain;
 
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Student class extending Person - demonstrates INHERITANCE
+ */
+public class Student extends Person {
+    private String registrationNumber;
+    private List<Course> enrolledCourses;
+    
+    // Constructor using super() - inheritance constructor pattern
+    public Student(String id, String fullName, String email, String registrationNumber) {
+        super(id, fullName, email); // Call to parent class constructor
+        this.registrationNumber = registrationNumber;
+        this.enrolledCourses = new ArrayList<>();
+    }
+    
+    // Implementation of abstract method from Person
+    @Override
+    public String getRole() {
+        return "Student";
+    }
+    
+    // Specific methods for Student class
+    public void enrollInCourse(Course course) {
+        if (course != null && !enrolledCourses.contains(course)) {
+            enrolledCourses.add(course);
+            System.out.println("Enrolled in: " + course.getTitle());
+        }
+    }
+    
+    public void unenrollFromCourse(Course course) {
+        enrolledCourses.remove(course);
+    }
+    
+    public List<Course> getEnrolledCourses() {
+        return new ArrayList<>(enrolledCourses); // Defensive copy
+    }
+    
+    public String getRegistrationNumber() {
+        return registrationNumber;
+    }
+    
+    public void setRegistrationNumber(String registrationNumber) {
+        this.registrationNumber = registrationNumber;
+    }
+    
+    // Override toString with student-specific info
+    @Override
+    public String toString() {
+        return super.toString() + " [Reg: " + registrationNumber + "]";
+    }
+    
+    // Override getDetails with student info
+    @Override
+    public String getDetails() {
+        return super.getDetails() + ", Registration: " + registrationNumber + 
+               ", Courses Enrolled: " + enrolledCourses.size();
+    }
+}
