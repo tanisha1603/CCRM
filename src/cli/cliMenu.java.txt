@@ -1,1 +1,372 @@
+package edu.ccrm.cli;
 
+import edu.ccrm.config.AppConfig;
+import edu.ccrm.domain.*;
+import edu.ccrm.service.*;
+import edu.ccrm.io.*;
+import java.util.Scanner;
+
+/**
+ * Command Line Interface Menu - demonstrates SWITCH statements and loops
+ */
+public class CLIMenu {
+    private Scanner scanner;
+    private StudentService studentService;
+    private CourseService courseService;
+    private EnrollmentService enrollmentService;
+    private ImportExportService importExportService;
+    private BackupService backupService;
+    private boolean running;
+    
+    public CLIMenu() {
+        this.scanner = new Scanner(System.in);
+        this.studentService = new StudentService();
+        this.courseService = new CourseService();
+        this.enrollmentService = new EnrollmentService();
+        
+        AppConfig config = AppConfig.getInstance();
+        this.importExportService = new ImportExportService(studentService, courseService);
+        this.backupService = new BackupService(config.getBackupDirectory());
+        
+        this.running = true;
+    }
+    
+    public void start() {
+        System.out.println("=== Campus Course Records Manager ===");
+        System.out.println("Welcome to CCRM!");
+        
+        // Main menu loop - demonstrates WHILE loop
+        while (running) {
+            displayMainMenu();
+            int choice = getIntInput("Enter your choice: ");
+            
+            // Enhanced switch statement (Java 14+)
+            switch (choice) {
+                case 1 -> manageStudents();
+                case 2 -> manageCourses();
+                case 3 -> manageEnrollments();
+                case 4 -> manageGrades();
+                case 5 -> importExportData();
+                case 6 -> backupOperations();
+                case 7 -> generateReports();
+                case 8 -> showJavaPlatformInfo();
+                case 0 -> exitApplication();
+                default -> System.out.println("Invalid choice! Please try again.");
+            }
+        }
+    }
+    
+    private void displayMainMenu() {
+        System.out.println("\n=== MAIN MENU ===");
+        System.out.println("1. Manage Students");
+        System.out.println("2. Manage Courses");
+        System.out.println("3. Manage Enrollments");
+        System.out.println("4. Manage Grades");
+        System.out.println("5. Import/Export Data");
+        System.out.println("6. Backup Operations");
+        System.out.println("7. Generate Reports");
+        System.out.println("8. Java Platform Info");
+        System.out.println("0. Exit");
+        System.out.println("-------------------");
+    }
+    
+    private void manageStudents() {
+        boolean inStudentMenu = true;
+        
+        // Demonstrates DO-WHILE loop
+        do {
+            System.out.println("\n=== STUDENT MANAGEMENT ===");
+            System.out.println("1. Add Student");
+            System.out.println("2. List All Students");
+            System.out.println("3. Find Student by ID");
+            System.out.println("4. Search Students by Name");
+            System.out.println("5. Update Student");
+            System.out.println("6. Deactivate Student");
+            System.out.println("7. Back to Main Menu");
+            
+            int choice = getIntInput("Enter your choice: ");
+            
+            // Classic switch statement
+            switch (choice) {
+                case 1: addStudent(); break;
+                case 2: listAllStudents(); break;
+                case 3: findStudentById(); break;
+                case 4: searchStudentsByName(); break;
+                case 5: updateStudent(); break;
+                case 6: deactivateStudent(); break;
+                case 7: inStudentMenu = false; break;
+                default: System.out.println("Invalid choice!");
+            }
+        } while (inStudentMenu);
+    }
+    
+    private void manageCourses() {
+        boolean inCourseMenu = true;
+        
+        // Labeled loop for demonstration
+        courseMenu: do {
+            System.out.println("\n=== COURSE MANAGEMENT ===");
+            System.out.println("1. Add Course");
+            System.out.println("2. List All Courses");
+            System.out.println("3. Find Course by Code");
+            System.out.println("4. Search Courses by Title");
+            System.out.println("5. Filter by Semester");
+            System.out.println("6. Filter by Department");
+            System.out.println("7. Back to Main Menu");
+            
+            int choice = getIntInput("Enter your choice: ");
+            
+            switch (choice) {
+                case 1: addCourse(); break;
+                case 2: listAllCourses(); break;
+                case 3: findCourseByCode(); break;
+                case 4: searchCoursesByTitle(); break;
+                case 5: filterCoursesBySemester(); break;
+                case 6: filterCoursesByDepartment(); break;
+                case 7: 
+                    inCourseMenu = false; 
+                    break courseMenu; // Labeled break
+                default: System.out.println("Invalid choice!");
+            }
+        } while (inCourseMenu);
+    }
+    
+    private void manageEnrollments() {
+        System.out.println("\n=== ENROLLMENT MANAGEMENT ===");
+        System.out.println("1. Enroll Student in Course");
+        System.out.println("2. View Student's Enrollments");
+        System.out.println("3. View Course Enrollments");
+        System.out.println("4. Back to Main Menu");
+        
+        int choice = getIntInput("Enter your choice: ");
+        
+        switch (choice) {
+            case 1 -> enrollStudentInCourse();
+            case 2 -> viewStudentEnrollments();
+            case 3 -> viewCourseEnrollments();
+            case 4 -> { return; } // Return to main menu
+            default -> System.out.println("Invalid choice!");
+        }
+    }
+    
+    private void manageGrades() {
+        System.out.println("\n=== GRADE MANAGEMENT ===");
+        System.out.println("1. Record Grade for Student");
+        System.out.println("2. View Student Transcript");
+        System.out.println("3. Calculate Student GPA");
+        System.out.println("4. Back to Main Menu");
+        
+        int choice = getIntInput("Enter your choice: ");
+        
+        switch (choice) {
+            case 1 -> recordGrade();
+            case 2 -> viewTranscript();
+            case 3 -> calculateGPA();
+            case 4 -> { return; }
+            default -> System.out.println("Invalid choice!");
+        }
+    }
+    
+    private void importExportData() {
+        System.out.println("\n=== IMPORT/EXPORT DATA ===");
+        System.out.println("1. Import Students from CSV");
+        System.out.println("2. Import Courses from CSV");
+        System.out.println("3. Export Students to CSV");
+        System.out.println("4. Export Courses to CSV");
+        System.out.println("5. Back to Main Menu");
+        
+        int choice = getIntInput("Enter your choice: ");
+        
+        switch (choice) {
+            case 1 -> importStudentsFromCSV();
+            case 2 -> importCoursesFromCSV();
+            case 3 -> exportStudentsToCSV();
+            case 4 -> exportCoursesToCSV();
+            case 5 -> { return; }
+            default -> System.out.println("Invalid choice!");
+        }
+    }
+    
+    private void backupOperations() {
+        System.out.println("\n=== BACKUP OPERATIONS ===");
+        System.out.println("1. Create Backup");
+        System.out.println("2. Calculate Backup Size");
+        System.out.println("3. List Backup Files");
+        System.out.println("4. Back to Main Menu");
+        
+        int choice = getIntInput("Enter your choice: ");
+        
+        switch (choice) {
+            case 1 -> createBackup();
+            case 2 -> calculateBackupSize();
+            case 3 -> listBackupFiles();
+            case 4 -> { return; }
+            default -> System.out.println("Invalid choice!");
+        }
+    }
+    
+    private void generateReports() {
+        System.out.println("\n=== REPORTS ===");
+        System.out.println("1. Student Report");
+        System.out.println("2. Course Report");
+        System.out.println("3. Enrollment Report");
+        System.out.println("4. GPA Distribution");
+        System.out.println("5. Back to Main Menu");
+        
+        int choice = getIntInput("Enter your choice: ");
+        
+        switch (choice) {
+            case 1 -> generateStudentReport();
+            case 2 -> generateCourseReport();
+            case 3 -> generateEnrollmentReport();
+            case 4 -> showGPADistribution();
+            case 5 -> { return; }
+            default -> System.out.println("Invalid choice!");
+        }
+    }
+    
+    // Placeholder methods for menu operations
+    private void addStudent() {
+        System.out.println("=== ADD STUDENT ===");
+        String id = getStringInput("Enter Student ID: ");
+        String regNo = getStringInput("Enter Registration Number: ");
+        String name = getStringInput("Enter Full Name: ");
+        String email = getStringInput("Enter Email: ");
+        
+        Student student = new Student(id, regNo, name, email);
+        studentService.save(student);
+        System.out.println("Student added successfully!");
+    }
+    
+    private void listAllStudents() {
+        System.out.println("=== ALL STUDENTS ===");
+        studentService.findAll().forEach(student -> {
+            System.out.println(student.getDetails());
+        });
+    }
+    
+    private void addCourse() {
+        System.out.println("=== ADD COURSE ===");
+        String code = getStringInput("Enter Course Code: ");
+        String title = getStringInput("Enter Course Title: ");
+        int credits = getIntInput("Enter Credits: ");
+        String department = getStringInput("Enter Department: ");
+        
+        // Using Builder pattern
+        Course course = new Course.Builder(code, title)
+            .credits(credits)
+            .department(department)
+            .semester(Semester.SPRING)
+            .build();
+            
+        courseService.save(course);
+        System.out.println("Course added successfully!");
+    }
+    
+    private void listAllCourses() {
+        System.out.println("=== ALL COURSES ===");
+        courseService.findAll().forEach(course -> {
+            System.out.println(course.toString());
+        });
+    }
+    
+    private void enrollStudentInCourse() {
+        System.out.println("=== ENROLL STUDENT ===");
+        String studentId = getStringInput("Enter Student ID: ");
+        String courseCode = getStringInput("Enter Course Code: ");
+        
+        // Implementation would find student and course, then enroll
+        System.out.println("Enrollment functionality to be implemented");
+    }
+    
+    private void importStudentsFromCSV() {
+        try {
+            AppConfig config = AppConfig.getInstance();
+            importExportService.importStudentsFromCSV(config.getStudentDataFile());
+        } catch (Exception e) {
+            System.out.println("Error importing students: " + e.getMessage());
+        }
+    }
+    
+    private void createBackup() {
+        try {
+            AppConfig config = AppConfig.getInstance();
+            String backupPath = backupService.createBackup(config.getDataDirectory());
+            System.out.println("Backup created at: " + backupPath);
+        } catch (Exception e) {
+            System.out.println("Error creating backup: " + e.getMessage());
+        }
+    }
+    
+    private void calculateBackupSize() {
+        try {
+            AppConfig config = AppConfig.getInstance();
+            long size = backupService.calculateDirectorySize(config.getBackupDirectory());
+            System.out.println("Total backup size: " + size + " bytes");
+        } catch (Exception e) {
+            System.out.println("Error calculating backup size: " + e.getMessage());
+        }
+    }
+    
+    private void showJavaPlatformInfo() {
+        System.out.println("\n=== JAVA PLATFORM INFORMATION ===");
+        System.out.println("Java Version: " + System.getProperty("java.version"));
+        System.out.println("Java Vendor: " + System.getProperty("java.vendor"));
+        System.out.println("Operating System: " + System.getProperty("os.name"));
+        
+        System.out.println("\nJava SE vs EE vs ME Comparison:");
+        System.out.println("• Java SE (Standard Edition): Desktop applications, core Java");
+        System.out.println("• Java EE (Enterprise Edition): Web applications, large systems");
+        System.out.println("• Java ME (Micro Edition): Mobile devices, embedded systems");
+        
+        System.out.println("\nThis application uses: Java SE (Standard Edition)");
+    }
+    
+    // More placeholder methods would be implemented similarly...
+    
+    private void findStudentById() { System.out.println("Find student by ID - to be implemented"); }
+    private void searchStudentsByName() { System.out.println("Search students by name - to be implemented"); }
+    private void updateStudent() { System.out.println("Update student - to be implemented"); }
+    private void deactivateStudent() { System.out.println("Deactivate student - to be implemented"); }
+    private void findCourseByCode() { System.out.println("Find course by code - to be implemented"); }
+    private void searchCoursesByTitle() { System.out.println("Search courses by title - to be implemented"); }
+    private void filterCoursesBySemester() { System.out.println("Filter courses by semester - to be implemented"); }
+    private void filterCoursesByDepartment() { System.out.println("Filter courses by department - to be implemented"); }
+    private void viewStudentEnrollments() { System.out.println("View student enrollments - to be implemented"); }
+    private void viewCourseEnrollments() { System.out.println("View course enrollments - to be implemented"); }
+    private void recordGrade() { System.out.println("Record grade - to be implemented"); }
+    private void viewTranscript() { System.out.println("View transcript - to be implemented"); }
+    private void calculateGPA() { System.out.println("Calculate GPA - to be implemented"); }
+    private void importCoursesFromCSV() { System.out.println("Import courses from CSV - to be implemented"); }
+    private void exportStudentsToCSV() { System.out.println("Export students to CSV - to be implemented"); }
+    private void exportCoursesToCSV() { System.out.println("Export courses to CSV - to be implemented"); }
+    private void listBackupFiles() { System.out.println("List backup files - to be implemented"); }
+    private void generateStudentReport() { System.out.println("Generate student report - to be implemented"); }
+    private void generateCourseReport() { System.out.println("Generate course report - to be implemented"); }
+    private void generateEnrollmentReport() { System.out.println("Generate enrollment report - to be implemented"); }
+    private void showGPADistribution() { System.out.println("Show GPA distribution - to be implemented"); }
+    
+    // Utility methods for input handling
+    private String getStringInput(String prompt) {
+        System.out.print(prompt);
+        return scanner.nextLine();
+    }
+    
+    private int getIntInput(String prompt) {
+        while (true) {
+            try {
+                System.out.print(prompt);
+                return Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input! Please enter a number.");
+            }
+        }
+    }
+    
+    private void exitApplication() {
+        System.out.println("Thank you for using Campus Course Records Manager!");
+        System.out.println("Goodbye!");
+        running = false;
+        scanner.close();
+    }
+}
