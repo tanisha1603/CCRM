@@ -1,1 +1,29 @@
+package src.main;
 
+import src.cli.CLIMenu;
+import src.config.AppConfig;
+
+/**
+ * Main class - entry point of the application
+ */
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("=== Campus Course Records Manager Starting ===");
+        
+        // Demonstrate Singleton pattern
+        AppConfig config = AppConfig.getInstance();
+        config.printConfig();
+        
+        try {
+            // Start the CLI menu system
+            CLIMenu menu = new CLIMenu();
+            menu.start();
+            
+        } catch (Exception e) {
+            System.err.println("Error starting application: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        System.out.println("=== Campus Course Records Manager Shutting Down ===");
+    }
+}
