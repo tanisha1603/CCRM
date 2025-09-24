@@ -1,1 +1,65 @@
+package src.domain;
 
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Instructor class extending Person - demonstrates INHERITANCE
+ */
+public class Instructor extends Person {
+    private String department;
+    private List<Course> coursesTeaching;
+    
+    // Constructor
+    public Instructor(String id, String fullName, String email, String department) {
+        super(id, fullName, email);
+        this.department = department;
+        this.coursesTeaching = new ArrayList<>();
+    }
+    
+    // Implementation of abstract method from Person
+    @Override
+    public String getRole() {
+        return "Instructor";
+    }
+    
+    // Specific methods for Instructor
+    public void assignCourse(Course course) {
+        if (course != null && !coursesTeaching.contains(course)) {
+            coursesTeaching.add(course);
+            course.setInstructor(this); // Bidirectional relationship
+        }
+    }
+    
+    public void removeCourse(Course course) {
+        coursesTeaching.remove(course);
+        if (course.getInstructor() == this) {
+            course.setInstructor(null);
+        }
+    }
+    
+    // Getters and setters
+    public String getDepartment() {
+        return department;
+    }
+    
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+    
+    public List<Course> getCoursesTeaching() {
+        return new ArrayList<>(coursesTeaching); // Defensive copy
+    }
+    
+    // Override toString with instructor-specific info
+    @Override
+    public String toString() {
+        return super.toString() + " [Dept: " + department + "]";
+    }
+    
+    @Override
+    public String getDetails() {
+        return super.getDetails() + ", Department: " + department + 
+               ", Courses Teaching: " + coursesTeaching.size();
+    }
+}
