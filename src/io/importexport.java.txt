@@ -1,1 +1,178 @@
+package src.io;
 
+import src.domain.Student;
+import src.domain.Course;
+import src.domain.Semester;
+import src.service.StudentService;
+import src.service.CourseService;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+/**
+ * Handles CSV import/export using Java NIO.2 API
+ */
+public class ImportExportService {
+    private StudentService studentService;
+    private CourseService courseService;
+    
+    public ImportExportService(StudentService studentService, CourseService courseService) {
+        this.studentService = studentService;
+        this.courseService = courseService;
+    }
+    
+    // Import students from CSV file
+    public void importStudentsFromCSV(String filePath) throws IOException {
+        Path path = Paths.get(filePath);
+        
+        // Using Files.lines() with Stream API for efficient reading
+        try (Stream<String> lines = Files.lines(path)) {
+            List<Student> students = lines
+                .skip(1) // Skip header row
+                .map(this::parseStudentFromCSV)
+                .filter(student -> student != null)
+                .collect(Collectors.toList());
+            
+            // Save all imported students
+            students.forEach(studentService::save);
+            System.out.println("Imported " + students.size() + " students from " + filePath);
+        }
+    }
+    
+    // Import courses from CSV file
+    public void importCoursesFromCSV(String filePath) throws IOException {
+        Path path = Paths.get(filePath);
+        
+        try (Stream<String> lines = Files.lines(path)) {
+            List<Course> courses = lines
+                .skip(1) // Skip header row
+                .map(this::parseCourseFromCSV)
+                .filter(course -> course != null)
+                .collect(Collectors.toList());
+            
+            courses.forEach(courseService::save);
+            System.out.println("Imported " + courses.size() + " courses from " + filePath);
+        }
+    }
+    
+    // Export students to CSV file
+    public void exportStudentsToCSV(String filePath) throws IOException {
+        Path path = Paths.get(filePath);
+        
+        // Create CSV header
+        String header = "id,regNo,fullName,email,status,dateCreated\n";
+        
+        // Create CSV content using Stream API
+        String content = studentService.findAll().stream()
+            .map(this::convertStudentToCSV)
+            .collect(Collectors.joining("\n"));
+        
+        // Write to file using NIO.2
+        Files.writeString(path, header + content, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        System.out.println("Exported " + studentService.findAll().size() + " students to " + filePath);
+    }
+    
+    // Export courses to CSV file
+    public void exportCoursesToCSV(String filePath) throws IOException {
+        Path path = Paths.get(filePath);
+        
+        String header = "code,title,credits,department,semester,instructor\n";
+        
+        String content = courseService.findAll().stream()
+            .map(this::convertCourseToCSV)
+            .collect(Collectors.joining("\n"));
+        
+        Files.writeString(path, header + content, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        System.out.println("Exported " + courseService.findAll().size() + " courses to " + filePath);
+    }
+    
+    // Parse CSV line to Student object
+    private Student parseStudentFromCSV(String csvLine) {
+        try {
+            String[] fields = csvLine.split(",");
+            if (fields.length >= 4) {
+                Student student = new Student(
+                    fields[0].trim(), // id
+                    fields[1].trim(), // regNo
+                    fields[2].trim(), // fullName
+                    fields[3].trim()  // email
+                );
+                
+                if (fields.length > 4 && "INACTIVE".equalsIgnoreCase(fields[4].trim())) {
+                    student.setActive(false);
+                }
+                
+                return student;
+            }
+        } catch (Exception e) {
+            System.err.println("Error parsing student from CSV: " + csvLine);
+        }
+        return null;
+    }
+    
+    // Parse CSV line to Course object
+    private Course parseCourseFromCSV(String csvLine) {
+        try {
+            String[] fields = csvLine.split(",");
+            if (fields.length >= 5) {
+                Course course = new Course.Builder(
+                    fields[0].trim(), // code
+                    fields[1].trim()  // title
+                )
+                .credits(Integer.parseInt(fields[2].trim())) // credits
+                .department(fields[3].trim()) // department
+                .semester(Semester.valueOf(fields[4].trim().toUpperCase())) // semester
+                .build();
+                
+                return course;
+            }
+        } catch (Exception e) {
+            System.err.println("Error parsing course from CSV: " + csvLine);
+        }
+        return null;
+    }
+    
+    // Convert Student to CSV line
+    private String convertStudentToCSV(Student student) {
+        return String.format("%s,%s,%s,%s,%s,%s",
+            student.getId(),
+            student.getRegistrationNumber(),
+            student.getFullName(),
+            student.getEmail(),
+            student.isActive() ? "ACTIVE" : "INACTIVE",
+            student.getDateCreated()
+        );
+    }
+    
+    // Convert Course to CSV line
+    private String convertCourseToCSV(Course course) {
+        return String.format("%s,%s,%d,%s,%s,%s",
+            course.getCode(),
+            course.getTitle(),
+            course.getCredits(),
+            course.getDepartment(),
+            course.getSemester().name(),
+            course.getInstructor() != null ? course.getInstructor().getFullName() : "N/A"
+        );
+    }
+    
+    // Utility method to check if file exists
+    public boolean fileExists(String filePath) {
+        return Files.exists(Paths.get(filePath));
+    }
+    
+    // Utility method to create directory if not exists
+    public void createDirectoryIfNotExists(String dirPath) throws IOException {
+        Path path = Paths.get(dirPath);
+        if (!Files.exists(path)) {
+            Files.createDirectories(path);
+        }
+    }
+}
