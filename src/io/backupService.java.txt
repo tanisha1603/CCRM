@@ -1,1 +1,142 @@
+package src.io;
 
+import java.io.IOException;
+import java.nio.file.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.stream.Stream;
+
+/**
+ * Handles backup operations using NIO.2 with recursion demonstration
+ */
+public class BackupService {
+    private String backupBasePath;
+    
+    public BackupService(String backupBasePath) {
+        this.backupBasePath = backupBasePath;
+    }
+    
+    // Create timestamped backup
+    public String createBackup(String sourceDir) throws IOException {
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        String backupDirName = "backup_" + timestamp;
+        Path backupPath = Paths.get(backupBasePath, backupDirName);
+        
+        // Create backup directory
+        Files.createDirectories(backupPath);
+        
+        // Copy files recursively
+        copyDirectoryRecursive(Paths.get(sourceDir), backupPath);
+        
+        System.out.println("Backup created: " + backupPath.toString());
+        return backupPath.toString();
+    }
+    
+    // Recursive directory copy - demonstrates RECURSION
+    private void copyDirectoryRecursive(Path source, Path target) throws IOException {
+        // Create target directory if it doesn't exist
+        if (!Files.exists(target)) {
+            Files.createDirectories(target);
+        }
+        
+        // Use Files.walk for directory traversal
+        try (Stream<Path> paths = Files.walk(source)) {
+            paths.forEach(sourcePath -> {
+                try {
+                    Path targetPath = target.resolve(source.relativize(sourcePath));
+                    if (Files.isDirectory(sourcePath)) {
+                        if (!Files.exists(targetPath)) {
+                            Files.createDirectories(targetPath);
+                        }
+                    } else {
+                        Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to copy: " + sourcePath, e);
+                }
+            });
+        }
+    }
+    
+    // Recursive method to calculate directory size - demonstrates RECURSION
+    public long calculateDirectorySize(String dirPath) {
+        return calculateSizeRecursive(Paths.get(dirPath));
+    }
+    
+    private long calculateSizeRecursive(Path path) {
+        try {
+            if (Files.isDirectory(path)) {
+                // Recursive case: directory - sum sizes of all contents
+                try (Stream<Path> paths = Files.list(path)) {
+                    return paths.mapToLong(this::calculateSizeRecursive).sum();
+                }
+            } else {
+                // Base case: file - return its size
+                return Files.size(path);
+            }
+        } catch (IOException e) {
+            System.err.println("Error calculating size for: " + path);
+            return 0;
+        }
+    }
+    
+    // List files recursively by depth
+    public void listFilesByDepth(String dirPath, int maxDepth) throws IOException {
+        Path startPath = Paths.get(dirPath);
+        if (!Files.exists(startPath)) {
+            System.out.println("Directory does not exist: " + dirPath);
+            return;
+        }
+        
+        System.out.println("Files in " + dirPath + " (max depth: " + maxDepth + "):");
+        listFilesRecursive(startPath, 0, maxDepth);
+    }
+    
+    private void listFilesRecursive(Path path, int currentDepth, int maxDepth) {
+        if (currentDepth > maxDepth) {
+            return; // Base case: reached maximum depth
+        }
+        
+        try {
+            if (Files.isDirectory(path)) {
+                String indent = "  ".repeat(currentDepth);
+                System.out.println(indent + "[DIR] " + path.getFileName());
+                
+                // Recursive case: process directory contents
+                try (Stream<Path> paths = Files.list(path)) {
+                    paths.forEach(subPath -> {
+                        listFilesRecursive(subPath, currentDepth + 1, maxDepth);
+                    });
+                }
+            } else {
+                String indent = "  ".repeat(currentDepth);
+                try {
+                    long size = Files.size(path);
+                    System.out.println(indent + "[FILE] " + path.getFileName() + " (" + size + " bytes)");
+                } catch (IOException e) {
+                    System.out.println(indent + "[FILE] " + path.getFileName() + " (size unknown)");
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error accessing: " + path);
+        }
+    }
+    
+    // Check if backup directory exists
+    public boolean backupExists(String backupName) {
+        return Files.exists(Paths.get(backupBasePath, backupName));
+    }
+    
+    // Get latest backup path
+    public String getLatestBackup() throws IOException {
+        try (Stream<Path> paths = Files.list(Paths.get(backupBasePath))) {
+            return paths
+                .filter(Files::isDirectory)
+                .filter(path -> path.getFileName().toString().startsWith("backup_"))
+                .sorted((p1, p2) -> p2.getFileName().compareTo(p1.getFileName())) // descending
+                .findFirst()
+                .map(Path::toString)
+                .orElse("No backups found");
+        }
+    }
+}
