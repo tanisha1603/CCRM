@@ -1,1 +1,26 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 
+public class LoadCSV {
+    public static void main(String[] args) {
+        String filePath = "test-data/student.csv";
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            String header = br.readLine();
+            System.out.println("Columns: " + header);
+
+            while ((line = br.readLine()) != null) {
+                String[] values = line.split(",");
+                System.out.println("Student ID: " + values[0] +
+                                   ", First Name: " + values[1] +
+                                   ", Last Name: " + values[2] +
+                                   ", Age: " + values[3] +
+                                   ", Email: " + values[4]);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
