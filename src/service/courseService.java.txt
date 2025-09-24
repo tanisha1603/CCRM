@@ -1,1 +1,104 @@
+package src.service;
 
+import src.domain.Course;
+import src.domain.Semester;
+import sr.domain.Instructor;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+/**
+ * CourseService with Stream API demonstrations
+ */
+public class CourseService implements Persistable<Course>, Searchable<Course> {
+    private List<Course> courses = new ArrayList<>();
+    
+    @Override
+    public void save(Course course) {
+        if (course != null && !exists(course.getCode())) {
+            courses.add(course);
+        }
+    }
+    
+    @Override
+    public Optional<Course> findById(String id) {
+        return courses.stream()
+                      .filter(c -> c.getCode().equals(id))
+                      .findFirst();
+    }
+    
+    public Optional<Course> findByCode(String code) {
+        return findById(code); // Alias for findById
+    }
+    
+    @Override
+    public List<Course> findAll() {
+        return new ArrayList<>(courses);
+    }
+    
+    @Override
+    public boolean delete(String id) {
+        return courses.removeIf(c -> c.getCode().equals(id));
+    }
+    
+    @Override
+    public boolean exists(String id) {
+        return courses.stream().anyMatch(c -> c.getCode().equals(id));
+    }
+    
+    @Override
+    public List<Course> searchByName(String name) {
+        return courses.stream()
+                      .filter(c -> c.getTitle().toLowerCase().contains(name.toLowerCase()))
+                      .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<Course> searchByKeyword(String keyword) {
+        return courses.stream()
+                      .filter(c -> c.getTitle().toLowerCase().contains(keyword.toLowerCase()) ||
+                                  c.getCode().toLowerCase().contains(keyword.toLowerCase()) ||
+                                  c.getDepartment().toLowerCase().contains(keyword.toLowerCase()))
+                      .collect(Collectors.toList());
+    }
+    
+    // Advanced Stream API operations
+    public List<Course> getCoursesBySemester(Semester semester) {
+        return courses.stream()
+                      .filter(c -> c.getSemester() == semester)
+                      .collect(Collectors.toList());
+    }
+    
+    public List<Course> getCoursesByInstructor(Instructor instructor) {
+        return courses.stream()
+                      .filter(c -> c.getInstructor() != null && c.getInstructor().equals(instructor))
+                      .collect(Collectors.toList());
+    }
+    
+    public List<Course> getCoursesByDepartment(String department) {
+        return courses.stream()
+                      .filter(c -> c.getDepartment().equalsIgnoreCase(department))
+                      .collect(Collectors.toList());
+    }
+    
+    public List<Course> getCoursesWithCredits(int minCredits) {
+        return courses.stream()
+                      .filter(c -> c.getCredits() >= minCredits)
+                      .collect(Collectors.toList());
+    }
+    
+    // Aggregation operations with Streams
+    public int getTotalCreditsOffered() {
+        return courses.stream()
+                      .mapToInt(Course::getCredits)
+                      .sum();
+    }
+    
+    public double getAverageCredits() {
+        return courses.stream()
+                      .mapToInt(Course::getCredits)
+                      .average()
+                      .orElse(0.0);
+    }
+}
