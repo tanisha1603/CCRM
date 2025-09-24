@@ -1,1 +1,99 @@
+package edu.ccrm.domain;
 
+/**
+ * Course class with Builder Pattern demonstration
+ */
+public class Course {
+    // Required fields - final for immutability
+    private final String code;
+    private final String title;
+    
+    // Optional fields
+    private final int credits;
+    private final String department;
+    private final Semester semester;
+    private Instructor instructor;
+    
+    // Private constructor for Builder pattern
+    private Course(Builder builder) {
+        this.code = builder.code;
+        this.title = builder.title;
+        this.credits = builder.credits;
+        this.department = builder.department;
+        this.semester = builder.semester;
+        this.instructor = builder.instructor;
+    }
+    
+    // Builder Pattern - for flexible object creation
+    public static class Builder {
+        // Required parameters
+        private final String code;
+        private final String title;
+        
+        // Optional parameters - initialized to default values
+        private int credits = 3;
+        private String department = "GENERAL";
+        private Semester semester = Semester.SPRING;
+        private Instructor instructor = null;
+        
+        public Builder(String code, String title) {
+            this.code = code;
+            this.title = title;
+        }
+        
+        public Builder credits(int credits) {
+            this.credits = credits;
+            return this;
+        }
+        
+        public Builder department(String department) {
+            this.department = department;
+            return this;
+        }
+        
+        public Builder semester(Semester semester) {
+            this.semester = semester;
+            return this;
+        }
+        
+        public Builder instructor(Instructor instructor) {
+            this.instructor = instructor;
+            return this;
+        }
+        
+        public Course build() {
+            return new Course(this);
+        }
+    }
+    
+    // Getters (no setters for immutability)
+    public String getCode() { return code; }
+    public String getTitle() { return title; }
+    public int getCredits() { return credits; }
+    public String getDepartment() { return department; }
+    public Semester getSemester() { return semester; }
+    public Instructor getInstructor() { return instructor; }
+    
+    // Setter only for instructor (can change)
+    public void setInstructor(Instructor instructor) {
+        this.instructor = instructor;
+    }
+    
+    @Override
+    public String toString() {
+        return code + " - " + title + " (" + credits + " credits)";
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Course course = (Course) obj;
+        return code.equals(course.code);
+    }
+    
+    @Override
+    public int hashCode() {
+        return code.hashCode();
+    }
+}
