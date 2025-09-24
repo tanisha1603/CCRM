@@ -1,1 +1,15 @@
+package src.service;
 
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Interface for persistence operations - demonstrates INTERFACE usage
+ */
+public interface Persistable<T> {
+    void save(T item);
+    Optional<T> findById(String id);
+    List<T> findAll();
+    boolean delete(String id);
+    boolean exists(String id);
+}
