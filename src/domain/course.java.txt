@@ -1,4 +1,4 @@
-package edu.ccrm.domain;
+package src.domain;
 
 /**
  * Course class with Builder Pattern demonstration
