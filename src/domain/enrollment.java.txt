@@ -1,1 +1,47 @@
+package src.domain;
 
+import java.time.LocalDate;
+
+/**
+ * Enrollment class linking Student and Course with Grade
+ */
+public class Enrollment {
+    private Student student;
+    private Course course;
+    private Grade grade;
+    private LocalDate enrollmentDate;
+    private LocalDate gradeDate;
+    
+    public Enrollment(Student student, Course course) {
+        this.student = student;
+        this.course = course;
+        this.enrollmentDate = LocalDate.now();
+        this.grade = null; // No grade initially
+        this.gradeDate = null;
+    }
+    
+    // Record grade for this enrollment
+    public void recordGrade(Grade grade) {
+        this.grade = grade;
+        this.gradeDate = LocalDate.now();
+    }
+    
+    // Calculate grade points
+    public double getGradePoints() {
+        return (grade != null) ? grade.getPoints() * course.getCredits() : 0.0;
+    }
+    
+    // Getters
+    public Student getStudent() { return student; }
+    public Course getCourse() { return course; }
+    public Grade getGrade() { return grade; }
+    public LocalDate getEnrollmentDate() { return enrollmentDate; }
+    public LocalDate getGradeDate() { return gradeDate; }
+    public boolean isGraded() { return grade != null; }
+    
+    @Override
+    public String toString() {
+        return student.getFullName() + " enrolled in " + course.getTitle() + 
+               (grade != null ? " - Grade: " + grade : " - Not graded");
+    }
+}
