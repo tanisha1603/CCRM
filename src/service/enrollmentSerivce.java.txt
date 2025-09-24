@@ -1,1 +1,75 @@
+package src.service;
 
+import src.domain.Enrollment;
+import src.domain.Student;
+import src.domain.Course;
+import src.domain.Grade;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+public class EnrollmentService implements Persistable<Enrollment> {
+    private List<Enrollment> enrollments = new ArrayList<>();
+    
+    @Override
+    public void save(Enrollment enrollment) {
+        if (enrollment != null && !exists(enrollment.getStudent().getId() + "-" + enrollment.getCourse().getCode())) {
+            enrollments.add(enrollment);
+        }
+    }
+    
+    public Enrollment enrollStudent(Student student, Course course) {
+        Enrollment enrollment = new Enrollment(student, course);
+        save(enrollment);
+        student.enrollInCourse(course);
+        return enrollment;
+    }
+    
+    public void recordGrade(Student student, Course course, Grade grade) {
+        findEnrollment(student, course).ifPresent(enrollment -> {
+            enrollment.recordGrade(grade);
+        });
+    }
+    
+    public Optional<Enrollment> findEnrollment(Student student, Course course) {
+        return enrollments.stream()
+                         .filter(e -> e.getStudent().equals(student) && e.getCourse().equals(course))
+                         .findFirst();
+    }
+    
+    public List<Enrollment> getEnrollmentsByStudent(Student student) {
+        return enrollments.stream()
+                         .filter(e -> e.getStudent().equals(student))
+                         .collect(Collectors.toList());
+    }
+    
+    public List<Enrollment> getEnrollmentsByCourse(Course course) {
+        return enrollments.stream()
+                         .filter(e -> e.getCourse().equals(course))
+                         .collect(Collectors.toList());
+    }
+    
+    // Interface method implementations
+    @Override
+    public Optional<Enrollment> findById(String id) {
+        return enrollments.stream()
+                         .filter(e -> (e.getStudent().getId() + "-" + e.getCourse().getCode()).equals(id))
+                         .findFirst();
+    }
+    
+    @Override
+    public List<Enrollment> findAll() {
+        return new ArrayList<>(enrollments);
+    }
+    
+    @Override
+    public boolean delete(String id) {
+        return enrollments.removeIf(e -> (e.getStudent().getId() + "-" + e.getCourse().getCode()).equals(id));
+    }
+    
+    @Override
+    public boolean exists(String id) {
+        return enrollments.stream().anyMatch(e -> (e.getStudent().getId() + "-" + e.getCourse().getCode()).equals(id));
+    }
+}
