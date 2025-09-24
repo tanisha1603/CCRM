@@ -1,1 +1,166 @@
+package src.service;
 
+import src.domain.Student;
+import src.domain.Course;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+/**
+ * StudentService implementing interfaces - demonstrates POLYMORPHISM
+ */
+public class StudentService implements Persistable<Student>, Searchable<Student> {
+    private List<Student> students = new ArrayList<>();
+    
+    // Persistable interface implementation
+    @Override
+    public void save(Student student) {
+        if (student != null && !exists(student.getId())) {
+            students.add(student);
+            System.out.println("Student saved: " + student.getFullName());
+        } else if (exists(student.getId())) {
+            // Update existing student
+            delete(student.getId());
+            students.add(student);
+            System.out.println("Student updated: " + student.getFullName());
+        }
+    }
+    
+    @Override
+    public Optional<Student> findById(String id) {
+        return students.stream()
+                      .filter(s -> s.getId().equals(id))
+                      .findFirst();
+    }
+    
+    @Override
+    public List<Student> findAll() {
+        return new ArrayList<>(students); // Defensive copy
+    }
+    
+    @Override
+    public boolean delete(String id) {
+        boolean removed = students.removeIf(s -> s.getId().equals(id));
+        if (removed) {
+            System.out.println("Student deleted with ID: " + id);
+        }
+        return removed;
+    }
+    
+    @Override
+    public boolean exists(String id) {
+        return students.stream().anyMatch(s -> s.getId().equals(id));
+    }
+    
+    // Searchable interface implementation
+    @Override
+    public List<Student> searchByName(String name) {
+        return students.stream()
+                      .filter(s -> s.getFullName().toLowerCase().contains(name.toLowerCase()))
+                      .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<Student> searchByKeyword(String keyword) {
+        return students.stream()
+                      .filter(s -> s.getFullName().toLowerCase().contains(keyword.toLowerCase()) ||
+                                  s.getEmail().toLowerCase().contains(keyword.toLowerCase()) ||
+                                  s.getRegistrationNumber().contains(keyword))
+                      .collect(Collectors.toList());
+    }
+    
+    // Student-specific business logic
+    public void enrollStudentInCourse(String studentId, Course course) {
+        Optional<Student> student = findById(studentId);
+        if (student.isPresent() && course != null) {
+            student.get().enrollInCourse(course);
+            System.out.println("Student " + student.get().getFullName() + " enrolled in " + course.getTitle());
+        } else {
+            System.out.println("Student or course not found!");
+        }
+    }
+    
+    public List<Student> getActiveStudents() {
+        return students.stream()
+                      .filter(Student::isActive)
+                      .collect(Collectors.toList());
+    }
+    
+    public List<Student> getInactiveStudents() {
+        return students.stream()
+                      .filter(s -> !s.isActive())
+                      .collect(Collectors.toList());
+    }
+    
+    public List<Student> getStudentsByCourse(Course course) {
+        return students.stream()
+                      .filter(s -> s.getEnrolledCourses().contains(course))
+                      .collect(Collectors.toList());
+    }
+    
+    // Stream API demonstration - aggregation operations
+    public long getTotalStudentCount() {
+        return students.stream().count();
+    }
+    
+    public long getActiveStudentCount() {
+        return students.stream()
+                      .filter(Student::isActive)
+                      .count();
+    }
+    
+    public List<String> getAllStudentEmails() {
+        return students.stream()
+                      .map(Student::getEmail)
+                      .collect(Collectors.toList());
+    }
+    
+    public List<String> getAllStudentNames() {
+        return students.stream()
+                      .map(Student::getFullName)
+                      .sorted()
+                      .collect(Collectors.toList());
+    }
+    
+    // Demonstration of method overloading (polymorphism)
+    public void printStudentDetails(String studentId) {
+        findById(studentId).ifPresentOrElse(
+            student -> System.out.println(student.getDetails()),
+            () -> System.out.println("Student not found with ID: " + studentId)
+        );
+    }
+    
+    public void printStudentDetails(Student student) {
+        if (student != null) {
+            System.out.println(student.getDetails());
+        }
+    }
+    
+    // Batch operations using streams
+    public void activateAllStudents() {
+        students.forEach(Student::setActive);
+        System.out.println("All students activated!");
+    }
+    
+    public void deactivateAllStudents() {
+        students.forEach(s -> s.setActive(false));
+        System.out.println("All students deactivated!");
+    }
+    
+    // Find student by registration number
+    public Optional<Student> findByRegistrationNumber(String regNo) {
+        return students.stream()
+                      .filter(s -> s.getRegistrationNumber().equals(regNo))
+                      .findFirst();
+    }
+    
+    // Validation method
+    public boolean isValidStudent(Student student) {
+        return student != null && 
+               student.getId() != null && 
+               student.getFullName() != null && 
+               student.getEmail() != null && 
+               student.getEmail().contains("@");
+    }
+}
