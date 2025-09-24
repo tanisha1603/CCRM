@@ -1,4 +1,4 @@
-package edu.ccrm.config;
+package src.config;
 
 import java.nio.file.Paths;
 
