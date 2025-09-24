@@ -1,1 +1,67 @@
+package edu.ccrm.config;
 
+import java.nio.file.Paths;
+
+/**
+ * Singleton class for application configuration - demonstrates SINGLETON pattern
+ */
+public class AppConfig {
+    // Singleton instance
+    private static AppConfig instance;
+    
+    // Configuration fields
+    private String dataDirectory;
+    private String backupDirectory;
+    private String studentDataFile;
+    private String courseDataFile;
+    
+    // Private constructor for Singleton pattern
+    private AppConfig() {
+        // Initialize with default values
+        this.dataDirectory = "data";
+        this.backupDirectory = "backups";
+        this.studentDataFile = Paths.get(dataDirectory, "students.csv").toString();
+        this.courseDataFile = Paths.get(dataDirectory, "courses.csv").toString();
+        
+        System.out.println("AppConfig initialized with data directory: " + dataDirectory);
+    }
+    
+    // Singleton getInstance method
+    public static AppConfig getInstance() {
+        if (instance == null) {
+            instance = new AppConfig();
+        }
+        return instance;
+    }
+    
+    // Getters
+    public String getDataDirectory() { return dataDirectory; }
+    public String getBackupDirectory() { return backupDirectory; }
+    public String getStudentDataFile() { return studentDataFile; }
+    public String getCourseDataFile() { return courseDataFile; }
+    
+    // Setters with validation
+    public void setDataDirectory(String dataDirectory) {
+        if (dataDirectory != null && !dataDirectory.trim().isEmpty()) {
+            this.dataDirectory = dataDirectory;
+            // Update file paths
+            this.studentDataFile = Paths.get(dataDirectory, "students.csv").toString();
+            this.courseDataFile = Paths.get(dataDirectory, "courses.csv").toString();
+        }
+    }
+    
+    public void setBackupDirectory(String backupDirectory) {
+        if (backupDirectory != null && !backupDirectory.trim().isEmpty()) {
+            this.backupDirectory = backupDirectory;
+        }
+    }
+    
+    // Utility method
+    public void printConfig() {
+        System.out.println("=== Application Configuration ===");
+        System.out.println("Data Directory: " + dataDirectory);
+        System.out.println("Backup Directory: " + backupDirectory);
+        System.out.println("Student Data File: " + studentDataFile);
+        System.out.println("Course Data File: " + courseDataFile);
+    }
+}
