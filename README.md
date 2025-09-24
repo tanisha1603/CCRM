@@ -1,6 +1,6 @@
 
 
-[README (1).md](https://github.com/user-attachments/files/22521805/README.1.md)
+[README (1).md](https://github.com/user-attachments/files/22521805/README.md)
 # Campus Course & Records Manager (CCRM)
 
 ## Project Overview
